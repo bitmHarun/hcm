@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  fastapi-app:
+    build: .
+    container_name: fastapi_submit_service
+    expose:
+      - "8000"
+    volumes:
+      - ./src:/app/src
+      - ./output.txt:/app/output.txt
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  envoy:
+    image: envoyproxy/envoy:v1.28-latest
+    container_name: envoy_proxy
+    user: root
+    ports:
+      - "8080:8080"  # Main traffic port
+      - "9901:9901"  # Admin interface
+    volumes:
+      - ./config/envoy.yaml:/etc/envoy/envoy.yaml
+      - ./logs:/var/log/envoy
+    command: ["-c", "/etc/envoy/envoy.yaml", "-l", "info"]
+    depends_on:
+      - fastapi-app
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
