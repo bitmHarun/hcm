@@ -1,0 +1,2 @@
+# Send logs every minute with proper arguments
+* * * * * /stroom-log-sender/send_to_stroom.sh /logs hcm-feed http://log-consumer:8090/stroom/datafeed >> /stroom-log-sender/logs/cron.log 2>&1

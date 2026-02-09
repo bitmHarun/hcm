@@ -29,6 +29,33 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+  stroom-log-sender:
+    image: gchq/stroom-log-sender:v2.2.0
+    container_name: stroom-log-sender
+    volumes:
+      - ./logs:/logs
+      - ./stroom/stroom-log-sender.yml:/stroom-log-sender/config.yml:ro
+      - ./stroom/crontab.txt:/stroom-log-sender/config/crontab.txt:ro
+      - ./stroom-sender-logs:/stroom-log-sender/logs  # Add this line
+    environment:
+      - STROOM_URL=http://log-consumer:8090/stroom/datafeed
+      - FEED_NAME=hcm-feed
+      - LOG_DIR=/logs
+    restart: unless-stopped
+    depends_on:
+      - envoy
+    networks:
+      - app-network
+  log-consumer:
+    build: ./log-consumer
+    container_name: log-consumer
+    volumes:
+      - ./received_logs:/app/received_logs  # Persist received logs
+    ports:
+      - "8090:8090"
+    networks:
+      - app-network
+    restart: unless-stopped
 
 networks:
   app-network:
