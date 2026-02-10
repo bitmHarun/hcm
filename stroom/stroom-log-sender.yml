@@ -1,0 +1,7 @@
+stroomUrl: "http://log-consumer:8090/stroom/datafeed"
+feedName: "hcm-feed"
+systemName: "hcm"
+environmentName: "PRODUCTION"
+
+logDir: "/logs"
+filePattern: "*.log"
