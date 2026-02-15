@@ -51,6 +51,23 @@ static_resources:
                       body_text = body:getBytes(0, body:length())
                     end
                     response_handle:streamInfo():dynamicMetadata():set("envoy.lb", "response_body", body_text)
+                    
+                    -- Calculate success based on response code
+                    local response_code = response_handle:headers():get(":status")
+                    local success = "false"
+                    local permitted = "false"
+                    
+                    if response_code ~= nil then
+                      local code = tonumber(response_code)
+                      -- Success for 2xx status codes
+                      if code >= 200 and code < 300 then
+                        success = "true"
+                        permitted = "true"
+                      end
+                    end
+                    
+                    response_handle:streamInfo():dynamicMetadata():set("envoy.lb", "success", success)
+                    response_handle:streamInfo():dynamicMetadata():set("envoy.lb", "permitted", permitted)
                   end
           - name: envoy.filters.http.router
             typed_config:
@@ -129,8 +146,8 @@ static_resources:
                           <Id>%REQ(X-USER-DN)%</Id>
                         </User>
                         <Outcome>
-                          <Success>true</Success>
-                          <Permitted>true</Permitted>
+                          <Success>%DYNAMIC_METADATA(envoy.lb:success)%</Success>
+                          <Permitted>%DYNAMIC_METADATA(envoy.lb:permitted)%</Permitted>
                         </Outcome>
                       </Authenticate>
                     </EventDetail>
